@@ -46,7 +46,7 @@ fn main() {
         Box::new(GetCityTemperatureFunction),
     );
 
-    let model = Model::MistralSmallLatest;
+    let model = Model::MistralSmall;
     let messages = vec![ChatMessage {
         role: ChatMessageRole::User,
         content: "What's the temperature in Paris?".to_string(),

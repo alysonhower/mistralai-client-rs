@@ -9,7 +9,7 @@ async fn main() {
     // This example suppose you have set the `MISTRAL_API_KEY` environment variable.
     let client = Client::new(None, None, None, None).unwrap();
 
-    let model = Model::OpenMistral7b;
+    let model = Model::Codestral;
     let messages = vec![ChatMessage {
         role: ChatMessageRole::User,
         content: "Just guess the next word: \"Eiffel ...\"?".to_string(),

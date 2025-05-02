@@ -8,17 +8,14 @@ use mistralai_client::v1::{
 #[test]
 fn test_model_constant() {
     let models = vec![
-        Model::OpenMistral7b,
-        Model::OpenMixtral8x7b,
-        Model::OpenMixtral8x22b,
+        Model::Ministral3b,
+        Model::Ministral8b,
+        Model::MistralSmall,
         Model::OpenMistralNemo,
-        Model::MistralTiny,
-        Model::MistralSmallLatest,
-        Model::MistralMediumLatest,
-        Model::MistralLargeLatest,
+        Model::Codestral,
+        Model::MistralSaba,
         Model::MistralLarge,
-        Model::CodestralLatest,
-        Model::CodestralMamba,
+        Model::PixtralLarge,
     ];
 
     let client = Client::new(None, None, None, None).unwrap();
