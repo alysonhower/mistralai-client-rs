@@ -484,25 +484,7 @@ impl Client {
         let request = self.build_request_sync(reqwest_client.get(url));
 
         let result = request.send();
-        match result {
-            Ok(response) => {
-                if response.status().is_success() {
-                    Ok(response)
-                } else {
-                    let response_status = response.status();
-                    let response_body = response.text().unwrap_or_default();
-                    debug!("Response Status: {}", &response_status);
-                    utils::debug_pretty_json_from_string("Response Data", &response_body);
-
-                    Err(error::ApiError {
-                        message: format!("{}: {}", response_status, response_body),
-                    })
-                }
-            }
-            Err(error) => Err(error::ApiError {
-                message: error.to_string(),
-            }),
-        }
+        self.handle_sync_response(result)
     }
 
     async fn get_async(&self, path: &str) -> Result<reqwest::Response, error::ApiError> {
@@ -514,25 +496,7 @@ impl Client {
         let request = self.build_request_async(request_builder);
 
         let result = request.send().await;
-        match result {
-            Ok(response) => {
-                if response.status().is_success() {
-                    Ok(response)
-                } else {
-                    let response_status = response.status();
-                    let response_body = response.text().await.unwrap_or_default();
-                    debug!("Response Status: {}", &response_status);
-                    utils::debug_pretty_json_from_string("Response Data", &response_body);
-
-                    Err(error::ApiError {
-                        message: format!("{}: {}", response_status, response_body),
-                    })
-                }
-            }
-            Err(error) => Err(error::ApiError {
-                message: error.to_string(),
-            }),
-        }
+        self.handle_async_response(result).await
     }
 
     fn post_sync<T: std::fmt::Debug + serde::ser::Serialize>(
@@ -549,25 +513,7 @@ impl Client {
         let request = self.build_request_sync(request_builder);
 
         let result = request.send();
-        match result {
-            Ok(response) => {
-                if response.status().is_success() {
-                    Ok(response)
-                } else {
-                    let response_status = response.status();
-                    let response_body = response.text().unwrap_or_default();
-                    debug!("Response Status: {}", &response_status);
-                    utils::debug_pretty_json_from_string("Response Data", &response_body);
-
-                    Err(error::ApiError {
-                        message: format!("{}: {}", response_body, response_status),
-                    })
-                }
-            }
-            Err(error) => Err(error::ApiError {
-                message: error.to_string(),
-            }),
-        }
+        self.handle_sync_response(result)
     }
 
     async fn post_async<T: serde::ser::Serialize + std::fmt::Debug>(
@@ -584,25 +530,7 @@ impl Client {
         let request = self.build_request_async(request_builder);
 
         let result = request.send().await;
-        match result {
-            Ok(response) => {
-                if response.status().is_success() {
-                    Ok(response)
-                } else {
-                    let response_status = response.status();
-                    let response_body = response.text().await.unwrap_or_default();
-                    debug!("Response Status: {}", &response_status);
-                    utils::debug_pretty_json_from_string("Response Data", &response_body);
-
-                    Err(error::ApiError {
-                        message: format!("{}: {}", response_status, response_body),
-                    })
-                }
-            }
-            Err(error) => Err(error::ApiError {
-                message: error.to_string(),
-            }),
-        }
+        self.handle_async_response(result).await
     }
 
     async fn post_stream<T: serde::ser::Serialize + std::fmt::Debug>(
@@ -619,6 +547,36 @@ impl Client {
         let request = self.build_request_stream(request_builder);
 
         let result = request.send().await;
+        self.handle_async_response(result).await
+    }
+
+    fn handle_sync_response(
+        &self,
+        result: Result<reqwest::blocking::Response, ReqwestError>,
+    ) -> Result<reqwest::blocking::Response, error::ApiError> {
+        match result {
+            Ok(response) => {
+                if response.status().is_success() {
+                    Ok(response)
+                } else {
+                    let response_status = response.status();
+                    let response_body = response.text().unwrap_or_default();
+                    debug!("Response Status: {}", &response_status);
+                    utils::debug_pretty_json_from_string("Response Data", &response_body);
+
+                    Err(error::ApiError {
+                        message: format!("{}: {}", response_status, response_body),
+                    })
+                }
+            }
+            Err(error) => Err(self.to_api_error(error)),
+        }
+    }
+
+    async fn handle_async_response(
+        &self,
+        result: Result<reqwest::Response, ReqwestError>,
+    ) -> Result<reqwest::Response, error::ApiError> {
         match result {
             Ok(response) => {
                 if response.status().is_success() {
@@ -634,9 +592,7 @@ impl Client {
                     })
                 }
             }
-            Err(error) => Err(error::ApiError {
-                message: error.to_string(),
-            }),
+            Err(error) => Err(self.to_api_error(error)),
         }
     }
 
