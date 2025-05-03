@@ -103,7 +103,7 @@ impl Client {
     ///     content: "Hello, world!".to_string(),
     ///     tool_calls: None,
     /// }];
-    /// let response = client.chat(Model::OpenMistral7b, messages, None).unwrap();
+    /// let response = client.chat(Model::MistralSmall, messages, None).unwrap();
     /// println!("{:?}: {}", response.choices[0].message.role, response.choices[0].message.content);
     /// ```
     pub fn chat(
@@ -158,7 +158,7 @@ impl Client {
     ///         content: "Hello, world!".to_string(),
     ///         tool_calls: None,
     ///     }];
-    ///     let response = client.chat_async(Model::OpenMistral7b, messages, None).await.unwrap();
+    ///     let response = client.chat_async(Model::MistralSmall, messages, None).await.unwrap();
     ///     println!("{:?}: {}", response.choices[0].message.role, response.choices[0].message.content);
     /// }
     /// ```
@@ -218,7 +218,7 @@ impl Client {
     ///     }];
     ///
     ///     let stream_result = client
-    ///         .chat_stream(Model::OpenMistral7b,messages, None)
+    ///         .chat_stream(Model::MistralSmall,messages, None)
     ///         .await
     ///         .unwrap();
     ///     stream_result
