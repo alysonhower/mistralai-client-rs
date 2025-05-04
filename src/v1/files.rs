@@ -1,0 +1,63 @@
+use serde::{Deserialize, Serialize};
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub enum FilePurpose {
+    #[serde(rename = "fine-tune")]
+    FineTune,
+    #[serde(rename = "batch")]
+    Batch,
+    #[serde(rename = "ocr")]
+    Ocr,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub enum SampleType {
+    #[serde(rename = "pretrain")]
+    Pretrain,
+    #[serde(rename = "instruct")]
+    Instruct,
+    #[serde(rename = "batch_request")]
+    BatchRequest,
+    #[serde(rename = "batch_result")]
+    BatchResult,
+    #[serde(rename = "batch_error")]
+    BatchError,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub enum Source {
+    #[serde(rename = "upload")]
+    Upload,
+    #[serde(rename = "repository")]
+    Repository,
+    #[serde(rename = "mistral")]
+    Mistral,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct UploadRequest {
+    pub file: String,
+    pub purpose: FilePurpose,
+}
+
+impl UploadRequest {
+    pub fn new(file: &str, purpose: FilePurpose) -> Self {
+        Self {
+            file: file.to_owned(),
+            purpose,
+        }
+    }
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct UploadResponse {
+    pub id: String,
+    pub object: String,
+    pub bytes: u64,
+    pub created_at: u32,
+    pub filename: String,
+    pub purpose: FilePurpose,
+    pub sample_type: SampleType,
+    pub num_lines: u32,
+    pub source: Source,
+}
