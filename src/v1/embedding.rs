@@ -5,16 +5,9 @@ use crate::v1::{common, constants};
 // -----------------------------------------------------------------------------
 // Request
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct EmbeddingRequestOptions {
     pub encoding_format: Option<EmbeddingRequestEncodingFormat>,
-}
-impl Default for EmbeddingRequestOptions {
-    fn default() -> Self {
-        Self {
-            encoding_format: None,
-        }
-    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]

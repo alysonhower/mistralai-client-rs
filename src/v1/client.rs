@@ -7,6 +7,7 @@ use std::{
     collections::HashMap,
     sync::{Arc, Mutex},
 };
+use tokio::sync::Mutex as AsyncMutex;
 
 use crate::v1::{chat, chat_stream, constants, embedding, error, model_list, tool, utils};
 
@@ -16,8 +17,7 @@ pub struct Client {
     pub endpoint: String,
     pub max_retries: u32,
     pub timeout: u32,
-
-    functions: Arc<Mutex<HashMap<String, Box<dyn tool::Function>>>>,
+    functions: Arc<AsyncMutex<HashMap<String, Box<dyn tool::Function>>>>,
     last_function_call_result: Arc<Mutex<Option<Box<dyn Any + Send>>>>,
 }
 
@@ -26,8 +26,7 @@ impl Client {
     ///
     /// # Arguments
     ///
-    /// * `api_key`     - An optional API key.
-    ///                   If not provided, the method will try to use the `MISTRAL_API_KEY` environment variable.
+    /// * `api_key`     - An optional API key. If not provided, the method will try to use the `MISTRAL_API_KEY` environment variable.
     /// * `endpoint`    - An optional custom API endpoint. Defaults to the official API endpoint if not provided.
     /// * `max_retries` - Optional maximum number of retries for failed requests. Defaults to `5`.
     /// * `timeout`     - Optional timeout in seconds for requests. Defaults to `120`.
@@ -60,8 +59,7 @@ impl Client {
         let endpoint = endpoint.unwrap_or(constants::API_URL_BASE.to_string());
         let max_retries = max_retries.unwrap_or(5);
         let timeout = timeout.unwrap_or(120);
-
-        let functions: Arc<_> = Arc::new(Mutex::new(HashMap::new()));
+        let functions: Arc<_> = Arc::new(AsyncMutex::new(HashMap::new()));
         let last_function_call_result = Arc::new(Mutex::new(None));
 
         Ok(Self {
@@ -367,8 +365,7 @@ impl Client {
     }
 
     pub fn register_function(&mut self, name: String, function: Box<dyn tool::Function>) {
-        let mut functions = self.functions.lock().unwrap();
-
+        let mut functions = self.functions.blocking_lock();
         functions.insert(name, function);
     }
 
@@ -381,12 +378,10 @@ impl Client {
             env!("CARGO_PKG_VERSION")
         );
 
-        let request_builder = request
+        request
             .bearer_auth(&self.api_key)
             .header("Accept", "application/json")
-            .header("User-Agent", user_agent);
-
-        request_builder
+            .header("User-Agent", user_agent)
     }
 
     fn build_request_async(&self, request: reqwest::RequestBuilder) -> reqwest::RequestBuilder {
@@ -395,12 +390,10 @@ impl Client {
             env!("CARGO_PKG_VERSION")
         );
 
-        let request_builder = request
+        request
             .bearer_auth(&self.api_key)
             .header("Accept", "application/json")
-            .header("User-Agent", user_agent);
-
-        request_builder
+            .header("User-Agent", user_agent)
     }
 
     fn build_request_stream(&self, request: reqwest::RequestBuilder) -> reqwest::RequestBuilder {
@@ -409,20 +402,18 @@ impl Client {
             env!("CARGO_PKG_VERSION")
         );
 
-        let request_builder = request
+        request
             .bearer_auth(&self.api_key)
             .header("Accept", "text/event-stream")
-            .header("User-Agent", user_agent);
-
-        request_builder
+            .header("User-Agent", user_agent)
     }
 
-    fn call_function_if_any(&self, response: chat::ChatResponse) -> () {
-        let next_result = match response.choices.get(0) {
+    fn call_function_if_any(&self, response: chat::ChatResponse) {
+        let next_result = match response.choices.first() {
             Some(first_choice) => match first_choice.message.tool_calls.to_owned() {
-                Some(tool_calls) => match tool_calls.get(0) {
+                Some(tool_calls) => match tool_calls.first() {
                     Some(first_tool_call) => {
-                        let functions = self.functions.lock().unwrap();
+                        let functions = self.functions.blocking_lock();
                         match functions.get(&first_tool_call.function.name) {
                             Some(function) => {
                                 let runtime = tokio::runtime::Runtime::new().unwrap();
@@ -448,20 +439,19 @@ impl Client {
         *last_result_lock = next_result;
     }
 
-    async fn call_function_if_any_async(&self, response: chat::ChatResponse) -> () {
-        let next_result = match response.choices.get(0) {
+    async fn call_function_if_any_async(&self, response: chat::ChatResponse) {
+        let next_result = match response.choices.first() {
             Some(first_choice) => match first_choice.message.tool_calls.to_owned() {
-                Some(tool_calls) => match tool_calls.get(0) {
+                Some(tool_calls) => match tool_calls.first() {
                     Some(first_tool_call) => {
-                        let functions = self.functions.lock().unwrap(); // This
-                                                                        // is triggering an error: "This MutexGuard is held across an await point"
+                        let functions = self.functions.lock().await;
                         match functions.get(&first_tool_call.function.name) {
                             Some(function) => {
                                 let result = function
                                     .execute(first_tool_call.function.arguments.to_owned())
-                                    .await; // Looks like this is being awaited here.
+                                    .await;
 
-                                Some(result) // How to fix the error above? AI?
+                                Some(result)
                             }
                             None => None,
                         }

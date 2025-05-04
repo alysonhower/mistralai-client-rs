@@ -6,7 +6,7 @@ async fn test_client_embeddings_async() {
     let client: Client = Client::new(None, None, None, None).unwrap();
 
     let model = EmbedModel::MistralEmbed;
-    let input = vec!["Embed this sentence.", "As well as this one."]
+    let input = ["Embed this sentence.", "As well as this one."]
         .iter()
         .map(|s| s.to_string())
         .collect();

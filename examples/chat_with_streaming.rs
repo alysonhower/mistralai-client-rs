@@ -41,5 +41,5 @@ async fn main() {
             }
         })
         .await;
-    print!("\n") // To persist the last chunk output.
+    println!() // To persist the last chunk output.
 }

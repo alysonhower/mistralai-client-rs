@@ -32,23 +32,23 @@ fn test_client_new_with_all_params() {
     let maybe_original_mistral_api_key = std::env::var("MISTRAL_API_KEY").ok();
     std::env::remove_var("MISTRAL_API_KEY");
 
-    let api_key = Some("test_api_key_from_param".to_string());
-    let endpoint = Some("https://example.org".to_string());
-    let max_retries = Some(10);
-    let timeout = Some(20);
+    let api_key = "test_api_key_from_param".to_owned();
+    let endpoint = "https://example.org".to_owned();
+    let max_retries = 10;
+    let timeout = 20;
 
     let client = Client::new(
-        api_key.clone(),
-        endpoint.clone(),
-        max_retries.clone(),
-        timeout.clone(),
+        Some(api_key.clone()),
+        Some(endpoint.clone()),
+        Some(max_retries),
+        Some(timeout),
     )
     .unwrap();
 
-    expect!(client.api_key).to_be(api_key.unwrap());
-    expect!(client.endpoint).to_be(endpoint.unwrap());
-    expect!(client.max_retries).to_be(max_retries.unwrap());
-    expect!(client.timeout).to_be(timeout.unwrap());
+    expect!(client.api_key).to_be(api_key);
+    expect!(client.endpoint).to_be(endpoint);
+    expect!(client.max_retries).to_be(max_retries);
+    expect!(client.timeout).to_be(timeout);
 
     match maybe_original_mistral_api_key {
         Some(original_mistral_api_key) => {
@@ -64,23 +64,23 @@ fn test_client_new_with_api_key_as_both_env_and_param() {
     std::env::remove_var("MISTRAL_API_KEY");
     std::env::set_var("MISTRAL_API_KEY", "test_api_key_from_env");
 
-    let api_key = Some("test_api_key_from_param".to_string());
-    let endpoint = Some("https://example.org".to_string());
-    let max_retries = Some(10);
-    let timeout = Some(20);
+    let api_key = "test_api_key_from_param".to_owned();
+    let endpoint = "https://example.org".to_owned();
+    let max_retries = 10;
+    let timeout = 20;
 
     let client = Client::new(
-        api_key.clone(),
-        endpoint.clone(),
-        max_retries.clone(),
-        timeout.clone(),
+        Some(api_key.clone()),
+        Some(endpoint.clone()),
+        Some(max_retries),
+        Some(timeout),
     )
     .unwrap();
 
-    expect!(client.api_key).to_be(api_key.unwrap());
-    expect!(client.endpoint).to_be(endpoint.unwrap());
-    expect!(client.max_retries).to_be(max_retries.unwrap());
-    expect!(client.timeout).to_be(timeout.unwrap());
+    expect!(client.api_key).to_be(api_key);
+    expect!(client.endpoint).to_be(endpoint);
+    expect!(client.max_retries).to_be(max_retries);
+    expect!(client.timeout).to_be(timeout);
 
     match maybe_original_mistral_api_key {
         Some(original_mistral_api_key) => {
