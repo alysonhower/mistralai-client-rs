@@ -290,7 +290,18 @@ impl Client {
         Ok(deserialized_stream)
     }
 
-    pub async fn upload(
+    /// Synchronously uploads a file.
+    ///
+    /// # Arguments
+    ///
+    /// * `file_path` - The path to the file to upload.
+    /// * `purpose` - The purpose of the file upload.
+    ///
+    /// # Returns
+    ///
+    /// Returns a [Result] containing the `UploadResponse` if the upload is successful,
+    /// or an [ApiError] if there is an error.
+    pub fn upload(
         &self,
         file_path: &str,
         purpose: files::FilePurpose,
@@ -298,31 +309,29 @@ impl Client {
         let url = format!("{}{}", self.endpoint, "/files");
         debug!("Request URL: {}", url);
 
-        let form = reqwest::multipart::Form::new()
+        let form = reqwest::blocking::multipart::Form::new()
             .file("file", file_path)
-            .await
             .map_err(|e| error::ApiError {
                 message: format!("File upload error: {}", e),
             })?
-            .text("purpose", purpose.to_string());
+            .text("purpose", purpose);
 
         let response = self
-            .build_request_async(reqwest::Client::new().post(url).multipart(form))
+            .build_request_sync(reqwest::blocking::Client::new().post(url).multipart(form))
             .send()
-            .await
             .map_err(|e| error::ApiError {
                 message: format!("Request failed: {}", e),
             })?;
 
         if !response.status().is_success() {
             let status = response.status();
-            let text = response.text().await.unwrap_or_default();
+            let text = response.text().unwrap_or_default();
             return Err(error::ApiError {
                 message: format!("HTTP {}: {}", status, text),
             });
         }
 
-        let raw_response = response.text().await.map_err(|e| error::ApiError {
+        let raw_response = response.text().map_err(|e| error::ApiError {
             message: format!("Failed to read response: {}", e),
         })?;
 

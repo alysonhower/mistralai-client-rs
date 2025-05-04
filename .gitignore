@@ -25,3 +25,5 @@ Cargo.lock
 .env
 .aider*
 .idea
+data/
+mistral-api-specification.txt

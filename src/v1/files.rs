@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::borrow::Cow;
 use std::fmt;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -23,6 +24,12 @@ impl fmt::Display for FilePurpose {
             FilePurpose::CodeInterpreter => write!(f, "code_interpreter"),
             FilePurpose::ImageGeneration => write!(f, "image_generation"),
         }
+    }
+}
+
+impl From<FilePurpose> for Cow<'static, str> {
+    fn from(purpose: FilePurpose) -> Self {
+        Cow::Owned(purpose.to_string())
     }
 }
 
