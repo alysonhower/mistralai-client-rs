@@ -453,14 +453,15 @@ impl Client {
             Some(first_choice) => match first_choice.message.tool_calls.to_owned() {
                 Some(tool_calls) => match tool_calls.get(0) {
                     Some(first_tool_call) => {
-                        let functions = self.functions.lock().unwrap();
+                        let functions = self.functions.lock().unwrap(); // This
+                                                                        // is triggering an error: "This MutexGuard is held across an await point"
                         match functions.get(&first_tool_call.function.name) {
                             Some(function) => {
                                 let result = function
                                     .execute(first_tool_call.function.arguments.to_owned())
-                                    .await;
+                                    .await; // Looks like this is being awaited here.
 
-                                Some(result)
+                                Some(result) // How to fix the error above? AI?
                             }
                             None => None,
                         }
