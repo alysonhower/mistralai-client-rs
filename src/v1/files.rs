@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::fmt;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub enum FilePurpose {
@@ -13,6 +14,17 @@ pub enum FilePurpose {
     #[serde(rename = "image_generation")]
     ImageGeneration,
 }
+impl fmt::Display for FilePurpose {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            FilePurpose::FineTune => write!(f, "fine-tune"),
+            FilePurpose::Batch => write!(f, "batch"),
+            FilePurpose::Ocr => write!(f, "ocr"),
+            FilePurpose::CodeInterpreter => write!(f, "code_interpreter"),
+            FilePurpose::ImageGeneration => write!(f, "image_generation"),
+        }
+    }
+}
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub enum SampleType {
@@ -26,6 +38,8 @@ pub enum SampleType {
     BatchResult,
     #[serde(rename = "batch_error")]
     BatchError,
+    #[serde(rename = "ocr_input")]
+    OcrInput,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]

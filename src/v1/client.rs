@@ -9,7 +9,7 @@ use std::{
 };
 use tokio::sync::Mutex as AsyncMutex;
 
-use crate::v1::{chat, chat_stream, constants, embedding, error, model_list, tool, utils};
+use crate::v1::{chat, chat_stream, constants, embedding, error, files, model_list, tool, utils};
 
 #[derive(Debug)]
 pub struct Client {
@@ -288,6 +288,50 @@ impl Client {
         });
 
         Ok(deserialized_stream)
+    }
+
+    pub async fn upload(
+        &self,
+        file_path: &str,
+        purpose: files::FilePurpose,
+    ) -> Result<files::UploadResponse, error::ApiError> {
+        let url = format!("{}{}", self.endpoint, "/files");
+        debug!("Request URL: {}", url);
+
+        let form = reqwest::multipart::Form::new()
+            .file("file", file_path)
+            .await
+            .map_err(|e| error::ApiError {
+                message: format!("File upload error: {}", e),
+            })?
+            .text("purpose", purpose.to_string());
+
+        let response = self
+            .build_request_async(reqwest::Client::new().post(url).multipart(form))
+            .send()
+            .await
+            .map_err(|e| error::ApiError {
+                message: format!("Request failed: {}", e),
+            })?;
+
+        if !response.status().is_success() {
+            let status = response.status();
+            let text = response.text().await.unwrap_or_default();
+            return Err(error::ApiError {
+                message: format!("HTTP {}: {}", status, text),
+            });
+        }
+
+        let raw_response = response.text().await.map_err(|e| error::ApiError {
+            message: format!("Failed to read response: {}", e),
+        })?;
+
+        serde_json::from_str::<files::UploadResponse>(&raw_response).map_err(|e| error::ApiError {
+            message: format!(
+                "Deserialization error: {} for response: {}",
+                e, raw_response
+            ),
+        })
     }
 
     pub fn embeddings(
