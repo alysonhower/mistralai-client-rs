@@ -8,6 +8,10 @@ pub enum FilePurpose {
     Batch,
     #[serde(rename = "ocr")]
     Ocr,
+    #[serde(rename = "code_interpreter")]
+    CodeInterpreter,
+    #[serde(rename = "image_generation")]
+    ImageGeneration,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
